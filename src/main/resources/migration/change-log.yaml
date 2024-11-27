@@ -1,0 +1,9 @@
+databaseChangeLog:
+  - logicalFilePath: no-path
+  - changeSet:
+      id: 2024-11-26.initiate-tables
+      author: Og'abek
+      changes:
+        - sqlFile:
+            dbms: 'postgresql'
+            path: migration/create-initial-tables.sql
