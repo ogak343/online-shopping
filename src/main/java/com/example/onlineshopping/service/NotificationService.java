@@ -41,7 +41,7 @@ public class NotificationService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSuccess(message -> log.info("Email sent successfully to {}", email))
                 .doOnError(ex -> log.error("Error sending email to {}: {}", email, ex.getMessage()))
-                .onErrorMap(ex -> new CustomException(ErrorCode.OTP_FAILED))
+                .onErrorMap(ex -> new CustomException(ErrorCode.NOTIFICATION_FAILED))
                 .then();
     }
 

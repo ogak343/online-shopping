@@ -41,7 +41,7 @@ public class UserService {
     public Mono<UserCreateResponse> create(UserCreateRequest request) {
         return repository.existsByUsername(request.username())
                 .flatMap(exists -> {
-                    if (exists) return Mono.error(new CustomException(ErrorCode.USER_EXISTS));
+                    if (Boolean.TRUE.equals(exists)) return Mono.error(new CustomException(ErrorCode.USER_EXISTS));
                     return repository.save(mapper.toEntity(request))
                             .flatMap(entity -> otpService.create(entity.getId())
                                     .flatMap(otp -> notificationService.sendOtp(otp.getCode(), entity.getEmail())
@@ -72,7 +72,6 @@ public class UserService {
                         return Mono.error(new CustomException(ErrorCode.INVALID_OTP));
                     if (!otp.getCode().equals(request.otpCode()))
                         return Mono.error(new CustomException(ErrorCode.INVALID_OTP_CODE));
-
                     return repository.findById(otp.getUserId())
                             .switchIfEmpty(Mono.error(new CustomException(ErrorCode.USER_NOT_FOUND)))
                             .publishOn(Schedulers.boundedElastic())

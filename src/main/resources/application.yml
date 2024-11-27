@@ -19,17 +19,20 @@ spring:
     default-schema: public
   mail:
     host: smtp.gmail.com
-    username: khamdamov343@gmail.com #${ONLINE_SHOPPING_MAIL_USERNAME:-}
-    password: zkdttpvovbovgezo  #${ONLINE_SHOPPING_MAIL_USERNAME:-}
+    username: ${ONLINE_SHOPPING_MAIL_USERNAME:-}
+    password: ${ONLINE_SHOPPING_MAIL_USERNAME:-}
     default-encoding: UTF-8
     protocol: smtps
     port: 465
+#    test-connection: true
 otp:
   duration: 5
 springdoc:
   swagger-ui:
     enabled: true
   show-actuator: true
+jwt:
+  secret: ${ONLINE_SHOPPING_JWT_SECRET}
 management:
   endpoints:
     web:

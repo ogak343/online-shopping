@@ -27,13 +27,14 @@ public class CategoryService {
     public Mono<CategoryResponse> create(CreateCategoryRequest request) {
         return repository.existsByName(request.name())
                 .flatMap(exists -> {
-                    if (exists) return Mono.error(new CustomException(ErrorCode.CATEGORY_EXISTS));
+                    if (Boolean.TRUE.equals(exists)) return Mono.error(new CustomException(ErrorCode.CATEGORY_EXISTS));
                     else return repository.save(mapper.toEntity(request)).map(mapper::toResponse);
                 });
     }
 
     public Mono<CategoryResponse> update(UpdateCategoryRequest request, Long id) {
         return repository.findById(id)
+                .switchIfEmpty(Mono.error(new CustomException(ErrorCode.CATEGORY_NOT_FOUND)))
                 .flatMap(entity -> {
                     mapper.update(entity, request);
                     return repository.save(entity).map(mapper::toResponse);
@@ -41,7 +42,9 @@ public class CategoryService {
     }
 
     public Mono<CategoryResponse> get(Long id) {
-        return repository.findById(id).map(mapper::toResponse);
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new CustomException(ErrorCode.CATEGORY_NOT_FOUND)))
+                .map(mapper::toResponse);
     }
 
     public Flux<CategoryResponse> getAll() {

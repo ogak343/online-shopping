@@ -11,8 +11,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-
 @Service
 public class ProductService {
     private final ProductRepository repository;
@@ -27,7 +25,7 @@ public class ProductService {
     public Mono<ProductResponse> create(CreateProductRequest request) {
         return repository.existsByCategoryId(request.categoryId())
                 .flatMap(exists -> {
-                    if (exists) return repository.save(mapper.toEntity(request)).map(mapper::toResponse);
+                    if (Boolean.TRUE.equals(exists)) return repository.save(mapper.toEntity(request)).map(mapper::toResponse);
                     else return Mono.error(new CustomException(ErrorCode.CATEGORY_NOT_FOUND));
                 });
     }
