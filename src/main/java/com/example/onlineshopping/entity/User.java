@@ -6,7 +6,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table
+@Table(name = "users")
 @Setter
 @Getter
 public class User {

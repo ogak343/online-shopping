@@ -8,12 +8,12 @@ import org.springframework.data.relational.core.mapping.Table;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-@Table
+@Table(name = "payment")
 @Setter
 @Getter
 public class Payment {
     private UUID id;
-    private Long customerId;
+    private Long userId;
     private Long orderId;
     private OffsetDateTime createAt;
     private OffsetDateTime paidAt;

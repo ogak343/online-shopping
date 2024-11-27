@@ -1,9 +1,8 @@
 package com.example.onlineshopping.service;
 
 import com.example.onlineshopping.contants.ErrorCode;
-import com.example.onlineshopping.dto.request.UserConfirmRequest;
 import com.example.onlineshopping.entity.Otp;
-import com.example.onlineshopping.exception.CustomerException;
+import com.example.onlineshopping.exception.CustomException;
 import com.example.onlineshopping.repository.OtpRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,7 +28,7 @@ public class OtpService {
         this.randomGenerator = randomGenerator;
     }
 
-    public Mono<Otp> save(Long userId) {
+    public Mono<Otp> create(Long userId) {
         long code = randomGenerator.nextInt(100000, 999999);
         Otp otp = new Otp();
         otp.setUserId(userId);
@@ -40,16 +39,12 @@ public class OtpService {
         return repository.save(otp);
     }
 
-    public void confirm(UserConfirmRequest request) {
-        repository.findById(request.otpId())
-                .switchIfEmpty(Mono.error(new CustomerException(ErrorCode.OTP_FAILED)))
-                .flatMap(entity -> {
-                    if (!entity.getCode().equals(request.otpCode())) {
-                        return Mono.error(new CustomerException(ErrorCode.OTP_FAILED));
-                    }
-                    entity.setConfirmed(true);
-                    return repository.save(entity);
-                })
-                .subscribe();
+    public Mono<Otp> save(Otp otp) {
+        return repository.save(otp);
+    }
+
+    public Mono<Otp> get(Long id) {
+        return repository.findById(id)
+                .switchIfEmpty(Mono.error(new CustomException(ErrorCode.OTP_NOT_FOUND)));
     }
 }

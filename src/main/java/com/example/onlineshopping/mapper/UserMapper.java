@@ -21,6 +21,7 @@ public class UserMapper {
         user.setPhoneNumber(request.phoneNumber());
         user.setFirstName(request.firstName());
         user.setLastName(request.lastName());
+        user.setVerified(false);
         user.setMiddleName(request.middleName());
         user.setAddress(request.address());
         user.setState(request.state());

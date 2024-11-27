@@ -6,18 +6,21 @@ import com.example.onlineshopping.dto.request.UserCreateRequest;
 import com.example.onlineshopping.dto.request.UserUpdateRequest;
 import com.example.onlineshopping.dto.response.UserCreateResponse;
 import com.example.onlineshopping.dto.response.UserResponse;
-import com.example.onlineshopping.entity.User;
-import com.example.onlineshopping.exception.CustomerException;
+import com.example.onlineshopping.exception.CustomException;
 import com.example.onlineshopping.mapper.UserMapper;
 import com.example.onlineshopping.repository.UserRepository;
 import com.example.onlineshopping.utils.AppUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
+
+import java.time.OffsetDateTime;
 
 @Service
+@Slf4j
 public class UserService {
-
     private final UserRepository repository;
     private final UserMapper mapper;
     private final OtpService otpService;
@@ -36,47 +39,62 @@ public class UserService {
 
     @Transactional
     public Mono<UserCreateResponse> create(UserCreateRequest request) {
-        boolean exists = repository.existsByUsername(request.username());
-        if (exists) throw new CustomerException(ErrorCode.USER_EXISTS);
-
-        return repository.save(mapper.toEntity(request))
-                .flatMap(entity ->
-                        otpService.save(entity.getId())
-                                .flatMap(otp ->
-                                        notificationService.sendOtp(Mono.just(otp.getCode()), entity.getEmail())
-                                                .thenReturn(new UserCreateResponse(
-                                                        otp.getId(),
-                                                        getSuccessMessage(entity.getEmail())
-                                                ))
-                                )
-                );
+        return repository.existsByUsername(request.username())
+                .flatMap(exists -> {
+                    if (exists) return Mono.error(new CustomException(ErrorCode.USER_EXISTS));
+                    return repository.save(mapper.toEntity(request))
+                            .flatMap(entity -> otpService.create(entity.getId())
+                                    .flatMap(otp -> notificationService.sendOtp(otp.getCode(), entity.getEmail())
+                                            .then(Mono.defer(() -> getSuccessMessage(entity.getEmail())
+                                                    .map(message -> new UserCreateResponse(otp.getId(), message))))
+                                    )
+                            );
+                });
     }
 
-    @Transactional
-    public Mono<UserResponse> update(UserUpdateRequest request) {
-        Long userId = AppUtils.userId();
-        Mono<User> user = repository.findById(userId)
-                .switchIfEmpty(Mono.error(new CustomerException(ErrorCode.USER_NOT_FOUND)));
 
-        return user.flatMap(entity -> {
-            mapper.update(entity, request);
-            return repository.save(entity).map(mapper::toResponse);
-        });
+    public Mono<UserResponse> update(UserUpdateRequest request) {
+        return AppUtils.userId()
+                .flatMap(userId -> repository.findById(userId)
+                        .switchIfEmpty(Mono.error(new CustomException(ErrorCode.USER_NOT_FOUND))))
+                .flatMap(user -> {
+                    mapper.update(user, request);
+                    return repository.save(user).map(mapper::toResponse);
+                });
     }
 
     @Transactional
     public Mono<Void> confirm(UserConfirmRequest request) {
-        otpService.confirm(request);
+        return otpService.get(request.otpId())
+                .publishOn(Schedulers.boundedElastic())
+                .flatMap(otp -> {
+                    if (otp.getExpiredAt().isBefore(OffsetDateTime.now()))
+                        return Mono.error(new CustomException(ErrorCode.INVALID_OTP));
+                    if (!otp.getCode().equals(request.otpCode()))
+                        return Mono.error(new CustomException(ErrorCode.INVALID_OTP_CODE));
 
-        return null;
+                    return repository.findById(otp.getUserId())
+                            .switchIfEmpty(Mono.error(new CustomException(ErrorCode.USER_NOT_FOUND)))
+                            .publishOn(Schedulers.boundedElastic())
+                            .flatMap(user -> {
+                                otp.setConfirmed(true);
+                                user.setVerified(true);
+                                return Mono.zip(
+                                        repository.save(user),
+                                        otpService.save(otp)
+                                ).then();
+                            });
+                });
     }
 
     public Mono<UserResponse> profile() {
-        Long userId = AppUtils.userId();
-        return repository.findById(userId).map(mapper::toResponse);
+        return AppUtils.userId()
+                .flatMap(userId -> repository.findById(userId)
+                        .switchIfEmpty(Mono.error(new CustomException(ErrorCode.USER_NOT_FOUND)))
+                        .map(mapper::toResponse));
     }
 
-    private String getSuccessMessage(String email) {
-        return String.format("We have sent OTP code to %s", email);
+    private Mono<String> getSuccessMessage(String email) {
+        return Mono.just(String.format("We have sent OTP code to %s", email));
     }
 }

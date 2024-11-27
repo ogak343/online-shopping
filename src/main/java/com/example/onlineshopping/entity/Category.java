@@ -5,7 +5,7 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-@Table
+@Table(name = "category")
 @Setter
 @Getter
 public class Category {

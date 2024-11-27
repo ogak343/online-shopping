@@ -7,7 +7,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.OffsetDateTime;
 
-@Table
+@Table(name = "otp")
 @Setter
 @Getter
 public class Otp {

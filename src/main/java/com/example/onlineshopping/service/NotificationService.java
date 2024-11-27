@@ -1,8 +1,7 @@
 package com.example.onlineshopping.service;
 
 import com.example.onlineshopping.contants.ErrorCode;
-import com.example.onlineshopping.exception.CustomerException;
-import jakarta.mail.MessagingException;
+import com.example.onlineshopping.exception.CustomException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -26,24 +25,24 @@ public class NotificationService {
         this.templateEngine = templateEngine;
     }
 
-    public Mono<Void> sendOtp(Mono<Long> otpCode, String email) {
-        return otpCode.flatMap(code ->
-                Mono.fromCallable(() -> {
+    public Mono<Void> sendOtp(Long otpCode, String email) {
+        return Mono.fromCallable(() -> {
                     MimeMessage message = mailSender.createMimeMessage();
-                    try {
-                        MimeMessageHelper helper = new MimeMessageHelper(message, true);
-                        Context context = new Context();
-                        context.setVariable("code", code);
-                        helper.setTo(email);
-                        helper.setSubject("Account Verification Page");
-                        helper.setText(templateEngine.process("AccountVerification.html", context), true);
-                        mailSender.send(message);
-                    } catch (MessagingException ex) {
-                        log.error("Error sending email", ex);
-                        throw new CustomerException(ErrorCode.OTP_FAILED);
-                    }
-                    return null;
-                }).subscribeOn(Schedulers.boundedElastic()).then()
-        );
+                    MimeMessageHelper helper = new MimeMessageHelper(message, true);
+                    Context context = new Context();
+                    context.setVariable("otpCode", otpCode);
+                    helper.setTo(email);
+                    helper.setSubject("Account Verification Page");
+                    String emailBody = templateEngine.process("AccountVerification.html", context);
+                    helper.setText(emailBody, true);
+                    mailSender.send(message);
+                    return message;
+                })
+                .subscribeOn(Schedulers.boundedElastic())
+                .doOnSuccess(message -> log.info("Email sent successfully to {}", email))
+                .doOnError(ex -> log.error("Error sending email to {}: {}", email, ex.getMessage()))
+                .onErrorMap(ex -> new CustomException(ErrorCode.OTP_FAILED))
+                .then();
     }
+
 }

@@ -8,7 +8,7 @@ import org.springframework.data.relational.core.mapping.Table;
 
 import java.time.OffsetDateTime;
 
-@Table
+@Table(name = "orders")
 @Setter
 @Getter
 public class Order {
@@ -16,7 +16,6 @@ public class Order {
     private Long id;
     private Long userId;
     private Long totalPrice;
-    private OffsetDateTime createdDate;
-    private OffsetDateTime paidDate;
+    private OffsetDateTime createdAt;
     private OrderStatus status;
 }

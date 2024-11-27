@@ -35,7 +35,7 @@ public class UserController {
         return ResponseEntity.ok(service.create(request));
     }
 
-    @PostMapping
+    @PostMapping("/confirm")
     public ResponseEntity<Mono<Void>> confirm(@RequestBody @Valid UserConfirmRequest request) {
 
         log.info("Confirming user {}", request);
@@ -43,10 +43,9 @@ public class UserController {
     }
 
     @PatchMapping
-    public ResponseEntity<Mono<UserResponse>> update(@RequestBody @Valid UserUpdateRequest request) {
-
+    public Mono<ResponseEntity<UserResponse>> update(@RequestBody @Valid UserUpdateRequest request) {
         log.info("Updating user {}", request);
-        return ResponseEntity.ok(service.update(request));
+        return service.update(request).map(ResponseEntity::ok);
     }
 
     @GetMapping("/profile")
