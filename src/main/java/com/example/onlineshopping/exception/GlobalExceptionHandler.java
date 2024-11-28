@@ -8,7 +8,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,16 +17,16 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
-    public Mono<ResponseEntity<ErrorResponseDto>> handleCustomException(CustomException e) {
+    public ResponseEntity<ErrorResponseDto> handleCustomException(CustomException e) {
 
         log.error(e.getErrorCode().getMessage());
-        return Mono.just(ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getStatusCode()))
-                .body(new ErrorResponseDto(e.getErrorCode())));
+        return ResponseEntity.status(HttpStatus.valueOf(e.getErrorCode().getStatusCode()))
+                .body(new ErrorResponseDto(e.getErrorCode()));
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    private Mono<ResponseEntity<ErrorResponseDto>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    private ResponseEntity<ErrorResponseDto> handleValidationExceptions(MethodArgumentNotValidException ex) {
         log.error("Bad Request: {}, Message: {}", 400, ex.getMessage());
         final List<String> errorList = new ArrayList<>();
 
@@ -36,7 +35,7 @@ public class GlobalExceptionHandler {
             final String errorMessage = error.getDefaultMessage();
             errorList.add(String.format("%s %s", fieldName, errorMessage));
         });
-        return Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponseDto(HttpStatus.BAD_REQUEST, errorList)));
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDto(HttpStatus.BAD_REQUEST, errorList));
     }
 }

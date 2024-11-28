@@ -1,15 +1,18 @@
 spring:
+  security:
+    user:
+      name:
   profiles:
     active: local
   application:
     name: online-shopping
-  r2dbc:
-    url: r2dbc:postgresql://127.0.0.1:5432/online-shopping
+  datasource:
+    url: jdbc:postgresql://127.0.0.1:5432/online-shopping
     username: online-shopping
     password: gotcha
-    pool:
-      enabled: true
-      max-life-time: 15000
+  jpa:
+    hibernate:
+      ddl-auto: none
   liquibase:
     url: jdbc:postgresql://127.0.0.1:5432/online-shopping
     user: online-shopping
@@ -19,20 +22,22 @@ spring:
     default-schema: public
   mail:
     host: smtp.gmail.com
-    username: ${ONLINE_SHOPPING_MAIL_USERNAME:-}
-    password: ${ONLINE_SHOPPING_MAIL_USERNAME:-}
+    username: khamdamov343@gmail.com #${ONLINE_SHOPPING_MAIL_USERNAME:-}
+    password: zkdttpvovbovgezo  #${ONLINE_SHOPPING_MAIL_USERNAME:-}
     default-encoding: UTF-8
     protocol: smtps
     port: 465
-#    test-connection: true
+    test-connection: true
 otp:
   duration: 5
 springdoc:
   swagger-ui:
     enabled: true
-  show-actuator: true
+  show-actuator: false
 jwt:
-  secret: ${ONLINE_SHOPPING_JWT_SECRET}
+  secret: ABABABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABABBA
+  access-duration: 900000
+  refresh-duration: 86400000
 management:
   endpoints:
     web:

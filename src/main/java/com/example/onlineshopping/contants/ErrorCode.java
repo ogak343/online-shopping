@@ -13,7 +13,16 @@ public enum ErrorCode {
     CATEGORY_NOT_FOUND(404, "Category Not Found"),
     PRODUCT_NOT_FOUND(404, "Product Not Found"),
     USER_EXISTS(409, "User Already Exists"),
-    INVALID_TOKEN(403, "Invalid Token"),;
+    INVALID_TOKEN(403, "Invalid Token"),
+    USER_UNVERIFIED(400, "User Unverified"),
+    WRONG_CREDENTIALS(403, "Wrong Credentials"),
+    INVALID_QUANTITY(400, "Invalid Quantity"),
+    ORDER_NOT_FOUND(404, "Order Not Found"),
+    PAYMENT_NOT_FOUND(404, "Payment Not Found"),
+    INVALID_ORDER_STATUS(400, "Invalid Order Status"),
+    BALANCE_NOT_FOUND(404, "Balance Not Found"),
+    ACCESS_DENIED(403, "Access Denied"),
+    NOT_ENOUGH_MONEY(400, "Not Enough Money"),;
 
     private final int statusCode;
     private final String message;

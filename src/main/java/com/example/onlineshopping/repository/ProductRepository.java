@@ -1,12 +1,12 @@
 package com.example.onlineshopping.repository;
 
 import com.example.onlineshopping.entity.Product;
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface ProductRepository extends R2dbcRepository<Product, Long> {
-    Mono<Boolean> existsByCategoryId(Long categoryId);
+import java.util.List;
 
-    Flux<Product> findAllByCategoryId(Long categoryId);
+public interface ProductRepository extends JpaRepository<Product, Long> {
+    boolean existsByCategoryId(Long categoryId);
+
+    List<Product> findAllByCategoryId(Long categoryId);
 }

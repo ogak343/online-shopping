@@ -6,7 +6,6 @@ import com.example.onlineshopping.exception.CustomException;
 import com.example.onlineshopping.repository.OtpRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
@@ -28,7 +27,7 @@ public class OtpService {
         this.randomGenerator = randomGenerator;
     }
 
-    public Mono<Otp> create(Long userId) {
+    public Otp create(Long userId) {
         long code = randomGenerator.nextInt(100000, 999999);
         Otp otp = new Otp();
         otp.setUserId(userId);
@@ -39,12 +38,12 @@ public class OtpService {
         return repository.save(otp);
     }
 
-    public Mono<Otp> save(Otp otp) {
-        return repository.save(otp);
+    public void save(Otp otp) {
+        repository.save(otp);
     }
 
-    public Mono<Otp> get(Long id) {
+    public Otp get(Long id) {
         return repository.findById(id)
-                .switchIfEmpty(Mono.error(new CustomException(ErrorCode.OTP_NOT_FOUND)));
+                .orElseThrow(() -> new CustomException(ErrorCode.OTP_NOT_FOUND));
     }
 }

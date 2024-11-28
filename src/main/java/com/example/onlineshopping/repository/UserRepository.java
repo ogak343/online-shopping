@@ -1,10 +1,13 @@
 package com.example.onlineshopping.repository;
 
 import com.example.onlineshopping.entity.User;
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
-import reactor.core.publisher.Mono;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends R2dbcRepository<User, Long> {
+import java.util.Optional;
 
-    Mono<Boolean> existsByUsername(String username);
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    boolean existsByUsername(String username);
+
+    Optional<User> findByUsername(String username);
 }

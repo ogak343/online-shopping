@@ -2,7 +2,7 @@ CREATE TABLE users
 (
     id           BIGSERIAL PRIMARY KEY,
     username     VARCHAR(50) NOT NULL,
-    password     VARCHAR(50) NOT NULL,
+    password     VARCHAR     NOT NULL,
     email        VARCHAR(50) NOT NULL,
     verified     BOOLEAN     NOT NULL,
     phone_number VARCHAR(50),
@@ -51,13 +51,31 @@ CREATE TABLE orders
     status      VARCHAR(15)
 );
 
+CREATE TABLE order_detail
+(
+    id         BIGSERIAL PRIMARY KEY,
+    order_id   BIGINT NOT NULL REFERENCES orders (id),
+    product_id BIGINT NOT NULL REFERENCES product (id),
+    quantity   BIGINT NOT NULL
+);
+
+CREATE TABLE balance
+(
+    token      UUID PRIMARY KEY,
+    amount     BIGINT NOT NULL,
+    user_id    BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE
+);
+
 CREATE TABLE payment
 (
-    id         UUID PRIMARY KEY,
-    user_id    BIGINT                   NOT NULL REFERENCES users (id),
-    order_id   BIGINT                   NOT NULL REFERENCES orders (id),
-    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
-    paid_at    TIMESTAMP WITH TIME ZONE,
-    amount     BIGINT                   NOT NULL,
-    status     VARCHAR(15)
+    id            UUID PRIMARY KEY,
+    user_id       BIGINT                   NOT NULL REFERENCES users (id),
+    order_id      BIGINT                   NOT NULL REFERENCES orders (id),
+    created_at    TIMESTAMP WITH TIME ZONE NOT NULL,
+    paid_at       TIMESTAMP WITH TIME ZONE,
+    balance_token UUID                     NOT NULL REFERENCES balance (token),
+    confirm_id    BIGINT                   NOT NULL,
+    amount        BIGINT                   NOT NULL,
+    status        VARCHAR(15)
 );

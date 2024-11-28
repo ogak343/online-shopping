@@ -1,7 +1,7 @@
 package com.example.onlineshopping.repository;
 
 import com.example.onlineshopping.entity.Otp;
-import org.springframework.data.r2dbc.repository.R2dbcRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OtpRepository extends R2dbcRepository<Otp, Long> {
+public interface OtpRepository extends JpaRepository<Otp, Long> {
 }

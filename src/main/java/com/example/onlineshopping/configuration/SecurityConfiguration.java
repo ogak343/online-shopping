@@ -3,39 +3,62 @@ package com.example.onlineshopping.configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
-import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
-import org.springframework.security.config.web.server.ServerHttpSecurity;
-import org.springframework.security.web.server.SecurityWebFilterChain;
-import org.springframework.security.web.server.context.NoOpServerSecurityContextRepository;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.CorsConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebFluxSecurity
+@EnableWebSecurity
 public class SecurityConfiguration {
 
+    private static final String[] ACCESSED_URLS = {
+            "/swagger-ui.html",
+            "/swagger-ui/**",
+            "/swagger-resources",
+            "/swagger-resources/**",
+            "/v2/api-docs",
+            "/v3/api-docs",
+            "/v3/api-docs/**"
+    };
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
-    private final AuthenticationManager authenticationManager;
 
-    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter,
-                                 AuthenticationManager authenticationManager) {
+    public SecurityConfiguration(JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
-        this.authenticationManager = authenticationManager;
     }
 
     @Bean
-    public SecurityWebFilterChain springSecurityFilterChain(ServerHttpSecurity http) {
-        return http
-                .authorizeExchange(exchanges -> exchanges
-                        .pathMatchers(HttpMethod.POST, "/swagger-ui.html").permitAll()
-                        .anyExchange().authenticated()
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(CorsConfigurer::disable)
+                .authorizeHttpRequests(
+                        registry ->
+                                registry.requestMatchers(HttpMethod.POST, "/users/confirm").permitAll()
+                                        .requestMatchers(HttpMethod.POST, "/users").permitAll()
+                                        .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
+                                        .requestMatchers(ACCESSED_URLS).permitAll()
+                                        .anyRequest().authenticated()
                 )
-                .securityContextRepository(NoOpServerSecurityContextRepository.getInstance())
-                .addFilterBefore(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
-                .authenticationManager(authenticationManager)
-                .httpBasic(ServerHttpSecurity.HttpBasicSpec::disable)
-                .formLogin(ServerHttpSecurity.FormLoginSpec::disable)
-                .csrf(ServerHttpSecurity.CsrfSpec::disable)
-                .cors(ServerHttpSecurity.CorsSpec::disable)
-                .build();
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    public BCryptPasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) throws Exception {
+        return configuration.getAuthenticationManager();
     }
 }
